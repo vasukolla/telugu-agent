@@ -23,3 +23,21 @@ export async function fetchStories(): Promise<Story[]> {
     return [];
   }
 }
+
+export async function submitFeedback(rating: string, comment: string): Promise<boolean> {
+  try {
+    const response = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ rating, comment }),
+    });
+    if (!response.ok) throw new Error('API error');
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    console.error("Failed to submit feedback:", error);
+    return false;
+  }
+}

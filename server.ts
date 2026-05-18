@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs/promises";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
@@ -12,6 +13,42 @@ async function startServer() {
   const PORT = process.env.PORT || 3000;
 
   // --- API Routes ---
+
+  // POST /api/feedback to store user feedback locally
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const { rating, comment, timestamp } = req.body;
+      if (!rating) {
+        return res.status(400).json({ success: false, error: "Rating is required" });
+      }
+      
+      const feedbackPath = path.join(process.cwd(), "feedback.json");
+      let currentFeedback = [];
+      
+      try {
+        const existingData = await fs.readFile(feedbackPath, "utf-8");
+        currentFeedback = JSON.parse(existingData);
+      } catch (e) {
+        // file doesn't exist yet, which is fine
+      }
+      
+      const newFeedback = {
+        id: `feedback-${Date.now()}`,
+        rating,
+        comment: comment || "",
+        timestamp: timestamp || new Date().toISOString()
+      };
+      
+      currentFeedback.push(newFeedback);
+      await fs.writeFile(feedbackPath, JSON.stringify(currentFeedback, null, 2), "utf-8");
+      
+      console.log("Feedback received successfully:", newFeedback);
+      res.json({ success: true, feedback: newFeedback });
+    } catch (error: any) {
+      console.error("Error saving feedback:", error);
+      res.status(500).json({ success: false, error: "Failed to save feedback" });
+    }
+  });
 
   // Generate a daily vocabulary list tailored for kids
   app.get("/api/vocab", async (req, res) => {
