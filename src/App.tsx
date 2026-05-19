@@ -27,9 +27,9 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const loadVocab = async () => {
+  const loadVocab = async (category?: string) => {
     setLoading(true);
-    const serverData = await fetchDailyVocab();
+    const serverData = await fetchDailyVocab(category);
     
     // Get up to 5 due words from SRS
     const dueWords = getDueWords(5);
@@ -92,7 +92,17 @@ export default function App() {
         
         {!loading && (
           <AnimatePresence mode="wait">
-            {mode === 'home' && <Home key="home" onSelectMode={setMode} />}
+            {mode === 'home' && (
+              <Home 
+                key="home" 
+                onSelectMode={(newMode, category) => {
+                  setMode(newMode);
+                  if (category) {
+                    loadVocab(category);
+                  }
+                }} 
+              />
+            )}
             {mode === 'read' && <ReadingApp key="read" vocab={vocab} />}
             {mode === 'speak' && <SpeakingApp key="speak" vocab={vocab} />}
             {mode === 'story' && <StoryApp key="story" />}

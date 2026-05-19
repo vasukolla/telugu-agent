@@ -1,8 +1,9 @@
 import { VocabWord, Story } from '../types';
 
-export async function fetchDailyVocab(): Promise<VocabWord[]> {
+export async function fetchDailyVocab(category?: string): Promise<VocabWord[]> {
   try {
-    const response = await fetch('/api/vocab');
+    const url = category ? `/api/vocab?category=${encodeURIComponent(category)}` : '/api/vocab';
+    const response = await fetch(url);
     if (!response.ok) throw new Error('API error');
     const data = await response.json();
     return data.vocab;
