@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Mic, MicOff, Play, Volume2, Star, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function SpeakingApp({ vocab }: { vocab: VocabWord[] }) {
+export default function SpeakingApp({ vocab }: { vocab: VocabWord[]; key?: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -126,7 +126,7 @@ export default function SpeakingApp({ vocab }: { vocab: VocabWord[] }) {
   const playAudio = () => {
     if (!currentWord) return;
     const utterance = new SpeechSynthesisUtterance(currentWord.nativeText);
-    utterance.lang = language === 'te-IN' ? 'te-IN' : 'zh-CN';
+    utterance.lang = 'te-IN';
     utterance.rate = 0.7; // slower for kids
     window.speechSynthesis.speak(utterance);
   };

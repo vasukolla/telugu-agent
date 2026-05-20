@@ -10,7 +10,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 async function startServer() {
   const app = express();
   app.use(express.json({limit: '50mb'}));
-  const PORT = process.env.PORT || 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   // --- API Routes ---
 
@@ -54,8 +54,11 @@ async function startServer() {
   app.get("/api/vocab", async (req, res) => {
     try {
       const categories = ['animals', 'colors', 'numbers', 'fruits', 'family members', 'body parts', 'nature', 'action verbs', 'everyday objects', 'food', 'weather', 'clothes', 'emotions'];
-      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-      const prompt = `Generate a list of 15 simple Telugu vocabulary words for a young child beginner, focusing on the category: ${randomCategory}. Return ONLY a JSON array of objects. Each object must have: 'nativeText' (the word in the Telugu script), 'pronunciation' (romanized pronunciation), 'english' (the english translation), and 'emoji' (a relevant emoji). Example: [{"nativeText":"కుక్క","pronunciation":"kukka","english":"dog","emoji":"🐶"}]`;
+      const queryCategory = req.query.category as string;
+      const category = (queryCategory && categories.includes(queryCategory.toLowerCase()))
+        ? queryCategory.toLowerCase()
+        : categories[Math.floor(Math.random() * categories.length)];
+      const prompt = `Generate a list of 15 simple Telugu vocabulary words for a young child beginner, focusing on the category: ${category}. Return ONLY a JSON array of objects. Each object must have: 'nativeText' (the word in the Telugu script), 'pronunciation' (romanized pronunciation), 'english' (the english translation), and 'emoji' (a relevant emoji). Example: [{"nativeText":"కుక్క","pronunciation":"kukka","english":"dog","emoji":"🐶"}]`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",

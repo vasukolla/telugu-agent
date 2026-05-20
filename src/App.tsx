@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'motion/react';
 export default function App() {
   const [mode, setMode] = useState<AppMode>('home');
   const [vocab, setVocab] = useState<VocabWord[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
   // Feedback states
@@ -29,7 +30,11 @@ export default function App() {
 
   const loadVocab = async (category?: string) => {
     setLoading(true);
-    const serverData = await fetchDailyVocab(category);
+    const catToFetch = category !== undefined ? category : selectedCategory;
+    if (category !== undefined) {
+      setSelectedCategory(category);
+    }
+    const serverData = await fetchDailyVocab(catToFetch || undefined);
     
     // Get up to 5 due words from SRS
     const dueWords = getDueWords(5);
@@ -95,15 +100,19 @@ export default function App() {
             {mode === 'home' && (
               <Home 
                 key="home" 
-                onSelectMode={(newMode, category) => {
+                onSelectMode={(newMode) => {
                   setMode(newMode);
-                  if (category) {
-                    loadVocab(category);
-                  }
                 }} 
               />
             )}
-            {mode === 'read' && <ReadingApp key="read" vocab={vocab} />}
+            {mode === 'read' && (
+              <ReadingApp 
+                key="read" 
+                vocab={vocab} 
+                selectedCategory={selectedCategory} 
+                onCategoryChange={(cat) => { loadVocab(cat); }} 
+              />
+            )}
             {mode === 'speak' && <SpeakingApp key="speak" vocab={vocab} />}
             {mode === 'story' && <StoryApp key="story" />}
             {mode === 'grammar' && <GrammarApp key="grammar" />}
