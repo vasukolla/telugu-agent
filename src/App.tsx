@@ -37,7 +37,7 @@ export default function App() {
     const serverData = await fetchDailyVocab(catToFetch || undefined);
     
     // Get up to 5 due words from SRS
-    const dueWords = getDueWords(5);
+    const dueWords = getDueWords(5, catToFetch || undefined);
     
     // Filter out duplicates from server data
     const newWords = serverData.filter(sw => !dueWords.some(dw => dw.nativeText === sw.nativeText));

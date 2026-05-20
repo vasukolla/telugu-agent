@@ -3,6 +3,7 @@ export interface VocabWord {
   pronunciation: string;
   english: string;
   emoji: string;
+  category?: string;
 }
 
 export interface StorySentence {

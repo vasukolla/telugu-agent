@@ -52,13 +52,14 @@ async function startServer() {
 
   // Generate a daily vocabulary list tailored for kids
   app.get("/api/vocab", async (req, res) => {
+    const categories = ['animals', 'colors', 'numbers', 'fruits', 'family members', 'body parts', 'nature', 'action verbs', 'everyday objects', 'food', 'weather', 'clothes', 'emotions'];
+    const queryCategory = req.query.category as string;
+    
     try {
-      const categories = ['animals', 'colors', 'numbers', 'fruits', 'family members', 'body parts', 'nature', 'action verbs', 'everyday objects', 'food', 'weather', 'clothes', 'emotions'];
-      const queryCategory = req.query.category as string;
       const category = (queryCategory && categories.includes(queryCategory.toLowerCase()))
         ? queryCategory.toLowerCase()
         : categories[Math.floor(Math.random() * categories.length)];
-      const prompt = `Generate a list of 15 simple Telugu vocabulary words for a young child beginner, focusing on the category: ${category}. Return ONLY a JSON array of objects. Each object must have: 'nativeText' (the word in the Telugu script), 'pronunciation' (romanized pronunciation), 'english' (the english translation), and 'emoji' (a relevant emoji). Example: [{"nativeText":"కుక్క","pronunciation":"kukka","english":"dog","emoji":"🐶"}]`;
+      const prompt = `Generate a list of 15 simple Telugu vocabulary words for a young child beginner, focusing on the category: ${category}. Return ONLY a JSON array of objects. Each object must have: 'nativeText' (the word in the Telugu script), 'pronunciation' (romanized pronunciation), 'english' (the english translation), 'emoji' (a relevant emoji), and 'category' (set to exactly "${category}"). Example: [{"nativeText":"కుక్క","pronunciation":"kukka","english":"dog","emoji":"🐶","category":"${category}"}]`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -69,7 +70,10 @@ async function startServer() {
       // Clean up markdown formatting if present
       text = text.replace(/```json/g, "").replace(/```/g, "").trim();
       
-      const vocab = JSON.parse(text);
+      let vocab = JSON.parse(text);
+      if (Array.isArray(vocab)) {
+        vocab = vocab.map(item => ({ ...item, category }));
+      }
       res.json({ vocab });
     } catch (error: any) {
       if (error?.status === 429) {
@@ -79,30 +83,38 @@ async function startServer() {
       }
       
       const ALL_FALLBACK_VOCAB = [
-        { nativeText: "పిల్లి", pronunciation: "pilli", english: "cat", emoji: "🐱" },
-        { nativeText: "కుక్క", pronunciation: "kukka", english: "dog", emoji: "🐶" },
-        { nativeText: "నీరు", pronunciation: "neeru", english: "water", emoji: "💧" },
-        { nativeText: "నిప్పు", pronunciation: "nippu", english: "fire", emoji: "🔥" },
-        { nativeText: "ఆకాశం", pronunciation: "aakasam", english: "sky", emoji: "☁️" },
-        { nativeText: "చెట్టు", pronunciation: "chettu", english: "tree", emoji: "🌳" },
-        { nativeText: "సూర్యుడు", pronunciation: "sooryudu", english: "sun", emoji: "☀️" },
-        { nativeText: "పాలు", pronunciation: "paalu", english: "milk", emoji: "🥛" },
-        { nativeText: "పువ్వు", pronunciation: "puvvu", english: "flower", emoji: "🌺" },
-        { nativeText: "అమ్మ", pronunciation: "amma", english: "mother", emoji: "👩‍👧" },
-        { nativeText: "ఆవు", pronunciation: "aavu", english: "cow", emoji: "🐮" },
-        { nativeText: "ఏనుగు", pronunciation: "enugu", english: "elephant", emoji: "🐘" },
-        { nativeText: "పక్షి", pronunciation: "pakshi", english: "bird", emoji: "🐦" },
-        { nativeText: "చేప", pronunciation: "chepa", english: "fish", emoji: "🐟" },
-        { nativeText: "కన్ను", pronunciation: "kannu", english: "eye", emoji: "👁️" },
-        { nativeText: "చేయి", pronunciation: "cheyi", english: "hand", emoji: "🖐️" },
-        { nativeText: "ఎరుపు", pronunciation: "erupu", english: "red", emoji: "🔴" },
-        { nativeText: "ఆకుపచ్చ", pronunciation: "akupaccha", english: "green", emoji: "🟢" },
-        { nativeText: "పండు", pronunciation: "pandu", english: "fruit", emoji: "🍎" },
-        { nativeText: "అన్నం", pronunciation: "annam", english: "rice", emoji: "🍚" }
+        { nativeText: "పిల్లి", pronunciation: "pilli", english: "cat", emoji: "🐱", category: "animals" },
+        { nativeText: "కుక్క", pronunciation: "kukka", english: "dog", emoji: "🐶", category: "animals" },
+        { nativeText: "నీరు", pronunciation: "neeru", english: "water", emoji: "💧", category: "nature" },
+        { nativeText: "నిప్పు", pronunciation: "nippu", english: "fire", emoji: "🔥", category: "nature" },
+        { nativeText: "ఆకాశం", pronunciation: "aakasam", english: "sky", emoji: "☁️", category: "nature" },
+        { nativeText: "చెట్టు", pronunciation: "chettu", english: "tree", emoji: "🌳", category: "nature" },
+        { nativeText: "సూర్యుడు", pronunciation: "sooryudu", english: "sun", emoji: "☀️", category: "nature" },
+        { nativeText: "పాలు", pronunciation: "paalu", english: "milk", emoji: "🥛", category: "food" },
+        { nativeText: "పువ్వు", pronunciation: "puvvu", english: "flower", emoji: "🌺", category: "nature" },
+        { nativeText: "అమ్మ", pronunciation: "amma", english: "mother", emoji: "👩‍👧", category: "family members" },
+        { nativeText: "ఆవు", pronunciation: "aavu", english: "cow", emoji: "🐮", category: "animals" },
+        { nativeText: "ఏనుగు", pronunciation: "enugu", english: "elephant", emoji: "🐘", category: "animals" },
+        { nativeText: "పక్షి", pronunciation: "pakshi", english: "bird", emoji: "🐦", category: "animals" },
+        { nativeText: "చేప", pronunciation: "chepa", english: "fish", emoji: "🐟", category: "animals" },
+        { nativeText: "కన్ను", pronunciation: "kannu", english: "eye", emoji: "👁️", category: "body parts" },
+        { nativeText: "చేయి", pronunciation: "cheyi", english: "hand", emoji: "🖐️", category: "body parts" },
+        { nativeText: "ఎరుపు", pronunciation: "erupu", english: "red", emoji: "🔴", category: "colors" },
+        { nativeText: "ఆకుపచ్చ", pronunciation: "akupaccha", english: "green", emoji: "🟢", category: "colors" },
+        { nativeText: "పండు", pronunciation: "pandu", english: "fruit", emoji: "🍎", category: "food" },
+        { nativeText: "అన్నం", pronunciation: "annam", english: "rice", emoji: "🍚", category: "food" }
       ];
       
-      // Shuffle and pick 10 words
-      const shuffled = ALL_FALLBACK_VOCAB.sort(() => 0.5 - Math.random());
+      let filtered = ALL_FALLBACK_VOCAB;
+      if (queryCategory) {
+        filtered = ALL_FALLBACK_VOCAB.filter(item => item.category === queryCategory.toLowerCase());
+      }
+      
+      if (filtered.length === 0) {
+        filtered = ALL_FALLBACK_VOCAB;
+      }
+      
+      const shuffled = filtered.sort(() => 0.5 - Math.random());
       res.json({
         vocab: shuffled.slice(0, 10)
       });

@@ -68,10 +68,13 @@ export function updateSrsWord(word: VocabWord, quality: number) {
   saveSrsData(data);
 }
 
-export function getDueWords(limit: number): SrsData[] {
+export function getDueWords(limit: number, category?: string): SrsData[] {
   const data = getSrsData();
   const now = Date.now();
-  const due = Object.values(data).filter(w => w.nextReviewDate <= now);
+  let due = Object.values(data).filter(w => w.nextReviewDate <= now);
+  if (category) {
+    due = due.filter(w => w.category === category);
+  }
   due.sort((a, b) => a.nextReviewDate - b.nextReviewDate); // oldest first
   return due.slice(0, limit);
 }
